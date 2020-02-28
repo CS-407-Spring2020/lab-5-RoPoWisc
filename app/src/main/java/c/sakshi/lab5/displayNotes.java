@@ -6,16 +6,23 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import java.util.ArrayList;
 
 public class displayNotes extends AppCompatActivity {
 
     TextView textViewTwo;
+    public static ArrayList<Note> notes = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,9 +30,34 @@ public class displayNotes extends AppCompatActivity {
         setContentView(R.layout.activity_display_notes);
 
         textViewTwo = (TextView) findViewById(R.id.txtWelcome);
-        Intent intent = getIntent();
+        final Intent intent = getIntent();
         String str = intent.getStringExtra("message");
         textViewTwo.setText("Welcome to Notes " + str + "!");
+
+        Context context = getApplicationContext();
+        SQLiteDatabase sqLiteDatabase = context.openOrCreateDatabase("notes", Context.MODE_PRIVATE, null);
+        DBHelper dbHelper = new DBHelper(sqLiteDatabase);
+        notes = dbHelper.readNotes(str);
+
+        ArrayList<String> displayNotes = new ArrayList<>();
+        for (Note note : notes){
+            displayNotes.add(String.format("Title: %s\nDate: %s", note.getTitle(), note.getDate()));
+        }
+
+        //ListView view to display notes on screen
+        ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, displayNotes);
+        ListView listView = (ListView) findViewById(R.id.ListdispNotes);
+        listView.setAdapter(adapter);
+
+        //Add onItemClickListner for ListView item, a note in this case
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Intent intentAddNote = new Intent(getApplicationContext(), addNotes.class);
+                intentAddNote.putExtra("noteid", position);
+                startActivity(intentAddNote);
+            }
+        });
     }
 
     //DIsplays Menu
@@ -44,7 +76,7 @@ public class displayNotes extends AppCompatActivity {
                 logOut();
                 return true;
             case R.id.itmAddNote:
-                //IMPL IN MileStoneTwo
+                addNote();
                 return true;
 
             default: return super.onOptionsItemSelected(item);
@@ -53,9 +85,15 @@ public class displayNotes extends AppCompatActivity {
 
     public void logOut(){
         Intent intent = new Intent(this, MainActivity.class);
-        SharedPreferences sharedPreferences = getSharedPreferences("com.potineni.lab5msl", Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getSharedPreferences("com.potineni.basicnotesapp", Context.MODE_PRIVATE);
         sharedPreferences.edit().remove("username").apply();
         startActivity(intent);
+    }
 
+    public void addNote(){
+        Intent intent = new Intent(this, addNotes.class);
+        //SharedPreferences sharedPreferences = getSharedPreferences("com.potineni.basicnotesapp", Context.MODE_PRIVATE);
+        //sharedPreferences.edit().remove("username").apply();
+        startActivity(intent);
     }
 }
