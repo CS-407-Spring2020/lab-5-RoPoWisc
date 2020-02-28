@@ -63,7 +63,7 @@ public class addNotes extends AppCompatActivity {
             dbHelper.saveNotes(username,title,content,date);
         }else{//UPDATE NOTE
             title = "NOTE_" + (noteid + 1);
-            dbHelper.updateNote(title, date, content);
+            dbHelper.updateNote(username,title, date, content);
         }
         goToMainPage(username);
 
